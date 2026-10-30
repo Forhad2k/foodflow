@@ -1,0 +1,10 @@
+node_modules
+dist
+test
+docs
+coverage
+.env
+.env.*
+!.env.example
+.tmp-wasm
+*.log

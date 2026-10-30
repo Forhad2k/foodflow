@@ -1,0 +1,37 @@
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource/hind-siliguri/400.css';
+@import '@fontsource/hind-siliguri/500.css';
+@import '@fontsource/hind-siliguri/600.css';
+@import '@fontsource/hind-siliguri/700.css';
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-background text-foreground font-sans antialiased; }
+  h1, h2, h3 { @apply font-display tracking-tight; }
+  :focus-visible { @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background; }
+  ::selection { @apply bg-primary/40; }
+}
+
+/* The kitchen order ticket: the one distinctive motif. Notched sides + a perforated divider. */
+@layer components {
+  .ticket {
+    --notch: 7px;
+    @apply bg-primary text-primary-foreground;
+    -webkit-mask: radial-gradient(circle var(--notch) at 0 50%, #0000 97%, #000) 0 0 / 51% 100% no-repeat,
+      radial-gradient(circle var(--notch) at 100% 50%, #0000 97%, #000) 100% 0 / 51% 100% no-repeat;
+    mask: radial-gradient(circle var(--notch) at 0 50%, #0000 97%, #000) 0 0 / 51% 100% no-repeat,
+      radial-gradient(circle var(--notch) at 100% 50%, #0000 97%, #000) 100% 0 / 51% 100% no-repeat;
+  }
+  .perforation { border-left: 2px dashed hsl(150 40% 11% / 0.35); }
+}
+
+.leaflet-container { @apply rounded-card font-sans; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

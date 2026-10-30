@@ -1,0 +1,51 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: backend } }
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env: { POSTGRES_USER: foodflow, POSTGRES_PASSWORD: foodflow, POSTGRES_DB: foodflow }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U foodflow" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://foodflow:foodflow@localhost:5432/foodflow
+      TEST_DATABASE_URL: postgresql://foodflow:foodflow@localhost:5432/foodflow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: backend/package-lock.json }
+      - run: npm ci
+      - run: npx prisma validate
+      - run: npm run typecheck
+      - name: Unit, SQL, integration and end-to-end tests (real PostgreSQL + PostGIS)
+        run: npm test -- --runInBand
+      - name: Migrations apply cleanly to an empty database
+        run: |
+          if ls -d prisma/migrations/*_init >/dev/null 2>&1; then npx prisma migrate deploy; else ./scripts/create-init-migration.sh; fi
+      - run: npm run build
+      - name: Dependency audit (production, high severity and up)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Docker image builds
+        run: docker build --target runtime -t foodflow-api .
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    env: { NEXT_PUBLIC_API_URL: http://localhost:4000 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Dependency audit (production, high severity and up)
+        run: npm audit --omit=dev --audit-level=high
